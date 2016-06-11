@@ -48,6 +48,8 @@ void proto_reg_handoff_ozwpan(void);
 /* Initialize the protocol and registered fields */
 static int proto_ozwpan = -1;
 
+static int hf_ozwpan_reserved = -1;
+
 static int hf_ozwpan_control = -1;
 static int hf_ozwpan_version = -1;
 static int hf_ozwpan_flags = -1;
@@ -281,6 +283,7 @@ dissect_connect_req(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int off
     col_set_str(pinfo->cinfo, COL_INFO, "Connect Request");
 
     proto_tree_add_item(tree, hf_ozwpan_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_reserved, tvb, offset + 1, 16, ENC_NA);
     proto_tree_add_item(tree, hf_ozwpan_pd_info, tvb, offset + 17, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_session_id, tvb, offset + 18, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_presleep, tvb, offset + 19, 1, ENC_LITTLE_ENDIAN);
@@ -290,6 +293,7 @@ dissect_connect_req(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int off
     proto_tree_add_item(tree, hf_ozwpan_apps, tvb, offset + 23, 2, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_max_len_div16, tvb, offset + 25, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_ms_per_isoc, tvb, offset + 26, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_reserved, tvb, offset + 27, 2, ENC_NA);
     return offset + tag_len;
 }
 
@@ -299,8 +303,10 @@ dissect_connect_rsp(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int off
 
     proto_tree_add_item(tree, hf_ozwpan_mode, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_status, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_reserved, tvb, offset + 2, 3, ENC_NA);
     proto_tree_add_item(tree, hf_ozwpan_session_id, tvb, offset + 5, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_apps, tvb, offset + 6, 2, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_reserved, tvb, offset + 8, 4, ENC_NA);
     return offset + tag_len;
 }
 
@@ -313,7 +319,9 @@ dissect_disconnect(packet_info *pinfo, int offset, int tag_len) {
 static int
 dissect_update_param_req(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
     col_set_str(pinfo->cinfo, COL_INFO, "Parameter Update Request");
+    proto_tree_add_item(tree, hf_ozwpan_reserved, tvb, offset, 16, ENC_NA);
     proto_tree_add_item(tree, hf_ozwpan_presleep, tvb, offset + 16, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_reserved, tvb, offset + 17, 1, ENC_NA);
     proto_tree_add_item(tree, hf_ozwpan_host_vendor, tvb, offset + 18, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_keep_alive, tvb, offset + 19, 1, ENC_LITTLE_ENDIAN);
     return offset + tag_len;
@@ -750,6 +758,11 @@ proto_register_ozwpan(void)
         {   &hf_ozwpan_ms_per_isoc,
             {   "Ms per ISOC", "ozwpan.ms_per_isoc",
                 FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_reserved,
+            {   "Reserved", "ozwpan.reserved",
+                FT_BYTES, BASE_NONE, NULL, 0, NULL, HFILL
             }
         },
         {   &hf_ozwpan_ep_num,
