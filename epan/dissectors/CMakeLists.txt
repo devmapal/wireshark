@@ -1053,6 +1053,7 @@ set(DISSECTOR_SRC
 	packet-ospf.c
 	packet-ossp.c
 	packet-ouch.c
+	packet-ozwpan.c
 	packet-p_mul.c
 	packet-pathport.c
 	packet-packetbb.c

@@ -590,6 +590,11 @@ extern "C" {
 #define ETHERTYPE_BLUECOM		0x892D	/* Bachmann bluecom protocol */
 #endif
 
+#ifndef ETHERTYPE_OZWPAN
+#define ETHERTYPE_OZWPAN		0x892e /* Ozmo USB over WIFI */
+#endif
+
+
 
 WS_DLL_PUBLIC const value_string etype_vals[];
 
