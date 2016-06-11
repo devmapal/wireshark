@@ -87,7 +87,16 @@ static int hf_ozwpan_usb_type = -1;
 static int hf_ozwpan_usb_format = -1;
 static int hf_ozwpan_unit_size = -1;
 static int hf_ozwpan_frame_num = -1;
-// static int hf_ozwpan_req_id = -1;
+static int hf_ozwpan_req_id = -1;
+static int hf_ozwpan_offset = -1;
+static int hf_ozwpan_size = -1;
+static int hf_ozwpan_req_type = -1;
+static int hf_ozwpan_recp = -1;
+static int hf_ozwpan_reqt = -1;
+static int hf_ozwpan_dptd = -1;
+static int hf_ozwpan_desc_type = -1;
+static int hf_ozwpan_w_index = -1;
+static int hf_ozwpan_length = -1;
 
 static int hf_ozwpan_app_data = -1;
 
@@ -99,6 +108,7 @@ static gint ett_ozwpan = -1;
 static gint ett_ozwpan_control = -1;
 static gint ett_ozwpan_control_flag = -1;
 static gint ett_ozwpan_element = -1;
+static gint ett_ozwpan_req_type = -1;
 
 /* OZWPAN protocol */
 
@@ -190,6 +200,10 @@ static gint ett_ozwpan_element = -1;
 #define OZ_REQT_CLASS			0x20
 #define OZ_REQT_VENDOR			0x40
 
+#define OZ_DPTD_MASK			0x80
+#define OZ_DPTD_HOST_TO_DEVICE		0x00
+#define OZ_DPTD_DEVICE_TO_HOST		0x80
+
 #define OZ_DATA_F_TYPE_MASK		0xf
 #define OZ_DATA_F_MULTIPLE_FIXED	0x1
 #define OZ_DATA_F_MULTIPLE_VAR		0x2
@@ -273,10 +287,33 @@ static const value_string usb_format_type[] = {
     {0,                             NULL }
 };
 
+static const value_string recipient[] = {
+    {OZ_RECP_DEVICE,                "Device" },
+    {OZ_RECP_INTERFACE,             "Interface" },
+    {OZ_RECP_ENDPOINT,	            "Endpoint" },
+    {0,                             NULL }
+};
+
+static const value_string request_type[] = {
+    {0x00,                          "Standard" },
+    {0x01,                          "Class" },
+    {0x02,                          "Vendor" },
+    {0,                             NULL }
+};
+
+static const value_string dptd[] = {
+    {0x0,                           "Host to Device" },
+    {0x1,                           "Device to Host" },
+    {0,                             NULL }
+};
+
 static value_string_ext element_type_ext = VALUE_STRING_EXT_INIT(element_type);
 static value_string_ext status_code_ext = VALUE_STRING_EXT_INIT(status_code);
 static value_string_ext usb_type_ext = VALUE_STRING_EXT_INIT(usb_type);
 static value_string_ext usb_format_type_ext = VALUE_STRING_EXT_INIT(usb_format_type);
+static value_string_ext recipient_ext = VALUE_STRING_EXT_INIT(recipient);
+static value_string_ext request_type_ext = VALUE_STRING_EXT_INIT(request_type);
+static value_string_ext dptd_ext = VALUE_STRING_EXT_INIT(dptd);
 
 static int
 dissect_connect_req(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
@@ -372,6 +409,28 @@ dissect_usb_endpoint_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, i
     }
 }
 
+static void
+dissect_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+    proto_tree *request_type_tree = NULL;
+    proto_item *req_type;
+
+    col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor request");
+
+    proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_offset, tvb, offset + 1, 2, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_size, tvb, offset + 3, 2, ENC_LITTLE_ENDIAN);
+
+    req_type = proto_tree_add_item(tree, hf_ozwpan_req_type, tvb, offset + 5, 1, ENC_LITTLE_ENDIAN);
+    request_type_tree = proto_item_add_subtree(req_type, ett_ozwpan_req_type);
+    proto_tree_add_item(request_type_tree, hf_ozwpan_recp, tvb, offset + 5, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(request_type_tree, hf_ozwpan_reqt, tvb, offset + 5, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(request_type_tree, hf_ozwpan_dptd, tvb, offset + 5, 1, ENC_LITTLE_ENDIAN);
+
+    proto_tree_add_item(tree, hf_ozwpan_desc_type, tvb, offset + 6, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_w_index, tvb, offset + 7, 2, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_length, tvb, offset + 9, 1, ENC_LITTLE_ENDIAN);
+}
+
 static int
 dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
     guint8 app_id, type;
@@ -390,6 +449,8 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
         
         switch (type) {
         case OZ_GET_DESC_REQ:
+            dissect_get_desc_req_data(pinfo, tree, tvb, offset + 3);
+            break;
         case OZ_GET_DESC_RSP:
         case OZ_SET_CONFIG_REQ:
         case OZ_SET_CONFIG_RSP:
@@ -817,6 +878,56 @@ proto_register_ozwpan(void)
                 FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
             }
         },
+        {   &hf_ozwpan_req_id,
+            {   "Request id", "ozwpan.req_id",
+                FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_offset,
+            {   "Offset", "ozwpan.offset",
+                FT_UINT16, BASE_HEX, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_size,
+            {   "Size", "ozwpan.size",
+                FT_UINT16, BASE_HEX, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_req_type,
+            {   "Request type", "ozwpan.req_type",
+                FT_UINT8, BASE_HEX, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_recp,
+            {   "Recipient", "ozwpan.recp",
+                FT_UINT8, BASE_DEC|BASE_EXT_STRING, &recipient_ext, OZ_RECP_MASK, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_reqt,
+            {   "Type", "ozwpan.reqt",
+                FT_UINT8, BASE_DEC|BASE_EXT_STRING, &request_type_ext, OZ_REQT_MASK, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_dptd,
+            {   "Data Phase Transfer Direction", "ozwpan.dptd",
+                FT_UINT8, BASE_DEC|BASE_EXT_STRING, &dptd_ext, OZ_DPTD_MASK, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_desc_type,
+            {   "Descriptor type", "ozwpan.desc_type",
+                FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_w_index,
+            {   "wIndex", "ozwpan.w_index",
+                FT_UINT16, BASE_HEX, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_length,
+            {   "Length", "ozwpan.length",
+                FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
     };
 
     static gint *ett[] = {
@@ -824,6 +935,7 @@ proto_register_ozwpan(void)
         &ett_ozwpan_control,
         &ett_ozwpan_control_flag,
         &ett_ozwpan_element,
+        &ett_ozwpan_req_type,
     };
 
     static ei_register_info ei[] = {
