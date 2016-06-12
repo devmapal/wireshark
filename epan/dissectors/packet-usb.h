@@ -237,6 +237,14 @@ extern value_string_ext usb_class_vals_ext;
 extern value_string_ext usb_urb_status_vals_ext;
 
 usb_conv_info_t *get_usb_iface_conv_info(packet_info *pinfo, guint8 interface_num);
+usb_trans_info_t
+*usb_get_trans_info(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree,
+                    usb_header_t header_type, usb_conv_info_t *usb_conv_info, guint64 usb_id);
+
+int
+dissect_usb_device_descriptor(packet_info *pinfo, proto_tree *parent_tree,
+                              tvbuff_t *tvb, int offset,
+                              usb_conv_info_t *usb_conv_info);
 
 proto_item * dissect_usb_descriptor_header(proto_tree *tree,
                                            tvbuff_t *tvb, int offset,

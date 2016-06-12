@@ -1692,7 +1692,7 @@ dissect_usb_device_qualifier_descriptor(packet_info *pinfo _U_, proto_tree *pare
 }
 
 /* 9.6.1 */
-static int
+int
 dissect_usb_device_descriptor(packet_info *pinfo, proto_tree *parent_tree,
                               tvbuff_t *tvb, int offset,
                               usb_conv_info_t *usb_conv_info)
@@ -3548,7 +3548,7 @@ usb_set_addr(proto_tree *tree, tvbuff_t *tvb, packet_info *pinfo, guint16 bus_id
 /* Gets the transfer info for a given packet
  * Generates transfer info if none exists yet
  * Also adds request/response info to the tree for the given packet */
-static usb_trans_info_t
+usb_trans_info_t
 *usb_get_trans_info(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree,
                     usb_header_t header_type, usb_conv_info_t *usb_conv_info, guint64 usb_id)
 {
