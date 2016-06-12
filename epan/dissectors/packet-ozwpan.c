@@ -42,6 +42,8 @@
 #include <epan/prefs.h>    /* Include only as needed */
 #include <epan/etypes.h>
 
+#include <epan/dissectors/packet-usb.h>
+
 void proto_register_ozwpan(void);
 void proto_reg_handoff_ozwpan(void);
 
@@ -90,6 +92,7 @@ static int hf_ozwpan_frame_num = -1;
 static int hf_ozwpan_req_id = -1;
 static int hf_ozwpan_offset = -1;
 static int hf_ozwpan_size = -1;
+static int hf_ozwpan_rcode = -1;
 static int hf_ozwpan_req_type = -1;
 static int hf_ozwpan_recp = -1;
 static int hf_ozwpan_reqt = -1;
@@ -414,8 +417,10 @@ dissect_usb_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
     proto_tree *request_type_tree = NULL;
     proto_item *req_type;
 
-    if (tvb_reported_length_remaining(tvb, offset) < 10)
+    if (tvb_reported_length_remaining(tvb, offset) < 10) {
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor request (Incomplete)");
         return;
+    }
 
     col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor request");
 
@@ -438,6 +443,36 @@ dissect_usb_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
     proto_tree_add_item(tree, hf_ozwpan_length, tvb, offset + 9, 1, ENC_LITTLE_ENDIAN);
 }
 
+static void
+dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+    guint8 desc_type;
+    usb_conv_info_t * usb_conv_info = get_usb_iface_conv_info(pinfo, 0);
+    usb_trans_info_t *usb_trans_info = wmem_new0(wmem_file_scope(), usb_trans_info_t);
+    usb_trans_info->request_in  = pinfo->num;
+    usb_trans_info->req_time    = pinfo->abs_ts;
+
+    usb_conv_info->usb_trans_info = usb_trans_info;
+
+    col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor response");
+
+    proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_offset, tvb, offset + 1, 2, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_size, tvb, offset + 3, 2, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_rcode, tvb, offset + 4, 1, ENC_LITTLE_ENDIAN);
+
+    desc_type = tvb_get_guint8(tvb, offset + 7);
+    switch (desc_type) {
+    case OZ_DESC_DEVICE:
+        dissect_usb_device_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
+        break;
+    case OZ_DESC_CONFIG:
+    case OZ_DESC_STRING:
+    default:
+        break;
+    }
+}
+
+
 static int
 dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
     guint8 app_id, type;
@@ -459,6 +494,8 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
             dissect_usb_get_desc_req_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_GET_DESC_RSP:
+            dissect_usb_get_desc_rsp_data(pinfo, tree, tvb, offset + 3);
+            break;
         case OZ_SET_CONFIG_REQ:
         case OZ_SET_CONFIG_RSP:
         case OZ_SET_INTERFACE_REQ:
@@ -898,6 +935,11 @@ proto_register_ozwpan(void)
         {   &hf_ozwpan_size,
             {   "Size", "ozwpan.size",
                 FT_UINT16, BASE_HEX, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_rcode,
+            {   "Return code", "ozwpan.rcode",
+                FT_UINT8, BASE_HEX, NULL, 0, NULL, HFILL
             }
         },
         {   &hf_ozwpan_req_type,
