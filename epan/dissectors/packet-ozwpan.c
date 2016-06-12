@@ -466,6 +466,8 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
         dissect_usb_device_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
         break;
     case OZ_DESC_CONFIG:
+        dissect_usb_configuration_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
+        break;
     case OZ_DESC_STRING:
     default:
         break;
