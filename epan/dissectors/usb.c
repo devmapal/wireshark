@@ -13049,6 +13049,7 @@ static const value_string usb_products_vals[] = {
     { 0x09557030, "Tegra 3 (recovery mode)" },
     { 0x095570a9, "nVidia CM9-Adam" },
     { 0x09557100, "Tegra Device" },
+    { 0x09557210, "Shield Controller" },
     { 0x09557820, "Tegra 2 AC100 developer mode" },
     { 0x0955b400, "SHIELD (debug)" },
     { 0x0955b401, "SHIELD" },
