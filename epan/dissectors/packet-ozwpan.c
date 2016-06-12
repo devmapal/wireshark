@@ -410,7 +410,7 @@ dissect_usb_endpoint_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, i
 }
 
 static void
-dissect_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+dissect_usb_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
     proto_tree *request_type_tree = NULL;
     proto_item *req_type;
 
@@ -456,7 +456,7 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
         
         switch (type) {
         case OZ_GET_DESC_REQ:
-            dissect_get_desc_req_data(pinfo, tree, tvb, offset + 3);
+            dissect_usb_get_desc_req_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_GET_DESC_RSP:
         case OZ_SET_CONFIG_REQ:
