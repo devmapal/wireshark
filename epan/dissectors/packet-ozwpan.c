@@ -428,6 +428,10 @@ dissect_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, i
 
     proto_tree_add_item(tree, hf_ozwpan_desc_type, tvb, offset + 6, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_w_index, tvb, offset + 7, 2, ENC_LITTLE_ENDIAN);
+
+    /* Here the ozwpan protocol differs from a USB get descriptor request,
+     * where the length field has a size of 2 bytes instead of 1 byte, so we
+     * can't use the standard USB get descriptor request dissector here. */
     proto_tree_add_item(tree, hf_ozwpan_length, tvb, offset + 9, 1, ENC_LITTLE_ENDIAN);
 }
 
