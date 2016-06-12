@@ -2225,7 +2225,7 @@ static const true_false_string tfs_remotewakeup = {
     "This device supports REMOTE WAKEUP",
     "This device does NOT support remote wakeup"
 };
-static int
+int
 dissect_usb_configuration_descriptor(packet_info *pinfo _U_, proto_tree *parent_tree,
                                      tvbuff_t *tvb, int offset,
                                      usb_conv_info_t  *usb_conv_info)
