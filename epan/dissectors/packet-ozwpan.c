@@ -414,6 +414,9 @@ dissect_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, i
     proto_tree *request_type_tree = NULL;
     proto_item *req_type;
 
+    if (tvb_reported_length_remaining(tvb, offset) < 10)
+        return;
+
     col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor request");
 
     proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
