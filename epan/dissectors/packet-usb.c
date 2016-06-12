@@ -1821,7 +1821,7 @@ dissect_usb_device_descriptor(packet_info *pinfo, proto_tree *parent_tree,
 }
 
 /* 9.6.7 */
-static int
+int
 dissect_usb_string_descriptor(packet_info *pinfo _U_, proto_tree *parent_tree,
                               tvbuff_t *tvb, int offset,
                               usb_conv_info_t  *usb_conv_info)

@@ -251,6 +251,11 @@ dissect_usb_configuration_descriptor(packet_info *pinfo _U_, proto_tree *parent_
                                      tvbuff_t *tvb, int offset,
                                      usb_conv_info_t  *usb_conv_info);
 
+int
+dissect_usb_string_descriptor(packet_info *pinfo _U_, proto_tree *parent_tree,
+                              tvbuff_t *tvb, int offset,
+                              usb_conv_info_t  *usb_conv_info);
+
 proto_item * dissect_usb_descriptor_header(proto_tree *tree,
                                            tvbuff_t *tvb, int offset,
                                            value_string_ext *type_val_str);
