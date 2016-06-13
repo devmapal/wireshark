@@ -446,6 +446,9 @@ dissect_usb_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
 static void
 dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
     guint8 desc_type;
+
+    // FIXME: Create throwaway usb_conv_info manually. The packet-usb package
+    // should allow me offload managing that state
     usb_conv_info_t * usb_conv_info = get_usb_iface_conv_info(pinfo, 0);
     usb_trans_info_t *usb_trans_info = wmem_new0(wmem_file_scope(), usb_trans_info_t);
     usb_trans_info->request_in  = pinfo->num;
@@ -469,6 +472,10 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
         dissect_usb_configuration_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
         break;
     case OZ_DESC_STRING:
+        // FIXME: Need to keeo more state. usb_index = 0 for getting wLANID,
+        // usb_index != 0 if descriptor contains the string
+        usb_trans_info->u.get_descriptor.usb_index = 1;
+        usb_trans_info->setup.wLength = tvb_get_letohs(tvb, offset + 3);
         dissect_usb_string_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
         break;
     default:
