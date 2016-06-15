@@ -524,22 +524,39 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
             dissect_usb_get_desc_rsp_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_SET_CONFIG_REQ:
+            break;
         case OZ_SET_CONFIG_RSP:
+            break;
         case OZ_SET_INTERFACE_REQ:
+            break;
         case OZ_SET_INTERFACE_RSP:
+            break;
         case OZ_VENDOR_CLASS_REQ:
+            break;
         case OZ_VENDOR_CLASS_RSP:
+            break;
         case OZ_GET_STATUS_REQ:
+            break;
         case OZ_GET_STATUS_RSP:
+            break;
         case OZ_CLEAR_FEATURE_REQ:
+            break;
         case OZ_CLEAR_FEATURE_RSP:
+            break;
         case OZ_SET_FEATURE_REQ:
+            break;
         case OZ_SET_FEATURE_RSP:
+            break;
         case OZ_GET_CONFIGURATION_REQ:
+            break;
         case OZ_GET_CONFIGURATION_RSP:
+            break;
         case OZ_GET_INTERFACE_REQ:
+            break;
         case OZ_GET_INTERFACE_RSP:
+            break;
         case OZ_SYNCH_FRAME_REQ:
+            break;
         case OZ_SYNCH_FRAME_RSP:
             //col_append_lstr(pinfo->cinfo, COL_INFO, " USB Control");
             proto_tree_add_item(tree, hf_ozwpan_app_data, tvb, offset + 3, tag_len - 3, ENC_LITTLE_ENDIAN);
