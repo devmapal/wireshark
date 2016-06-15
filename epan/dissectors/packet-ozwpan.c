@@ -310,6 +310,13 @@ static const value_string dptd[] = {
     {0,                             NULL }
 };
 
+static const value_string desc_type[] = {
+    {OZ_DESC_DEVICE,                "Device descriptor" },
+    {OZ_DESC_CONFIG,                "Configuration descriptor" },
+    {OZ_DESC_STRING,                "String descriptor" },
+    {0,                             NULL }
+};
+
 static value_string_ext element_type_ext = VALUE_STRING_EXT_INIT(element_type);
 static value_string_ext status_code_ext = VALUE_STRING_EXT_INIT(status_code);
 static value_string_ext usb_type_ext = VALUE_STRING_EXT_INIT(usb_type);
@@ -317,6 +324,7 @@ static value_string_ext usb_format_type_ext = VALUE_STRING_EXT_INIT(usb_format_t
 static value_string_ext recipient_ext = VALUE_STRING_EXT_INIT(recipient);
 static value_string_ext request_type_ext = VALUE_STRING_EXT_INIT(request_type);
 static value_string_ext dptd_ext = VALUE_STRING_EXT_INIT(dptd);
+static value_string_ext desc_type_ext = VALUE_STRING_EXT_INIT(desc_type);
 
 static int
 dissect_connect_req(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
@@ -445,7 +453,8 @@ dissect_usb_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
 
 static void
 dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
-    guint8 desc_type;
+    guint8 desc_type_id;
+    guint16 usb_offset, size;
 
     // FIXME: Create throwaway usb_conv_info manually. The packet-usb package
     // should allow me offload managing that state
@@ -463,8 +472,15 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
     proto_tree_add_item(tree, hf_ozwpan_size, tvb, offset + 3, 2, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_rcode, tvb, offset + 4, 1, ENC_LITTLE_ENDIAN);
 
-    desc_type = tvb_get_guint8(tvb, offset + 7);
-    switch (desc_type) {
+    usb_offset = tvb_get_guint16(tvb, offset + 1, ENC_LITTLE_ENDIAN);
+    size = tvb_get_guint16(tvb, offset + 3, ENC_LITTLE_ENDIAN);
+    if (tvb_reported_length_remaining(tvb, offset + 6) < (size - usb_offset)) {
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor response (Incomplete)");
+        return;
+    }
+
+    desc_type_id = tvb_get_guint8(tvb, offset + 7);
+    switch (desc_type_id) {
     case OZ_DESC_DEVICE:
         dissect_usb_device_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
         break;
@@ -975,7 +991,7 @@ proto_register_ozwpan(void)
         },
         {   &hf_ozwpan_desc_type,
             {   "Descriptor type", "ozwpan.desc_type",
-                FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+                FT_UINT8, BASE_DEC|BASE_EXT_STRING, &desc_type_ext, 0, NULL, HFILL
             }
         },
         {   &hf_ozwpan_w_index,
