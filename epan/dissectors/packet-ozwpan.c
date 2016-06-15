@@ -499,6 +499,14 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
     }
 }
 
+static void
+dissect_usb_set_config_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+    col_set_str(pinfo->cinfo, COL_INFO, "USB set configuration request");
+
+    proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_index, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+}
+
 
 static int
 dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
@@ -524,6 +532,7 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
             dissect_usb_get_desc_rsp_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_SET_CONFIG_REQ:
+            dissect_usb_set_config_req_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_SET_CONFIG_RSP:
             break;
