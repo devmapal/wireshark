@@ -100,8 +100,12 @@ static int hf_ozwpan_dptd = -1;
 static int hf_ozwpan_desc_type = -1;
 static int hf_ozwpan_w_index = -1;
 static int hf_ozwpan_length = -1;
+static int hf_ozwpan_request = -1;
+static int hf_ozwpan_value = -1;
+static int hf_ozwpan_vendor_class_index = -1;
 
 static int hf_ozwpan_app_data = -1;
+static int hf_ozwpan_vendor_class_rqt_data = -1;
 
 static expert_field ei_ozwpan_element_data = EI_INIT;
 static expert_field ei_ozwpan_element_length = EI_INIT;
@@ -515,6 +519,30 @@ dissect_usb_set_config_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *
     proto_tree_add_item(tree, hf_ozwpan_rcode, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
 }
 
+static void
+dissect_usb_vendor_class_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+    proto_tree *request_type_tree = NULL;
+    proto_item *req_type;
+
+    col_set_str(pinfo->cinfo, COL_INFO, "USB vendor class request");
+
+    proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+
+    req_type = proto_tree_add_item(tree, hf_ozwpan_req_type, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+    request_type_tree = proto_item_add_subtree(req_type, ett_ozwpan_req_type);
+    proto_tree_add_item(request_type_tree, hf_ozwpan_recp, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(request_type_tree, hf_ozwpan_reqt, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(request_type_tree, hf_ozwpan_dptd, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+
+    proto_tree_add_item(tree, hf_ozwpan_request, tvb, offset + 2, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_value, tvb, offset + 3, 2, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_vendor_class_index, tvb, offset + 5, 2, ENC_LITTLE_ENDIAN);
+
+    if (tvb_reported_length_remaining(tvb, offset + 7) > 0) {
+        proto_tree_add_item(tree, hf_ozwpan_vendor_class_rqt_data, tvb, offset + 7, tvb_reported_length_remaining(tvb, offset + 7), ENC_LITTLE_ENDIAN);
+    }
+}
+
 
 static int
 dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset, int tag_len) {
@@ -550,6 +578,7 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
         case OZ_SET_INTERFACE_RSP:
             break;
         case OZ_VENDOR_CLASS_REQ:
+            dissect_usb_vendor_class_req_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_VENDOR_CLASS_RSP:
             break;
@@ -1037,6 +1066,26 @@ proto_register_ozwpan(void)
         {   &hf_ozwpan_length,
             {   "Length", "ozwpan.length",
                 FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_request,
+            {   "Request", "ozwpan.request",
+                FT_UINT8, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_value,
+            {   "Value", "ozwpan.value",
+                FT_UINT16, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_vendor_class_index,
+            {   "Index", "ozwpan.vendor_class_index",
+                FT_UINT16, BASE_DEC, NULL, 0, NULL, HFILL
+            }
+        },
+        {   &hf_ozwpan_vendor_class_rqt_data,
+            {   "Vendor class request data", "ozwpan.vendor_class_rqt_data",
+                FT_BYTES, BASE_NONE, NULL, 0, "Frame Data", HFILL
             }
         },
     };
