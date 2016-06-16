@@ -531,6 +531,14 @@ dissect_usb_set_interface_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_
 }
 
 static void
+dissect_usb_set_interface_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+    col_set_str(pinfo->cinfo, COL_INFO, "USB set interface response");
+
+    proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_rcode, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+}
+
+static void
 dissect_usb_vendor_class_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
     proto_tree *request_type_tree = NULL;
     proto_item *req_type;
@@ -600,6 +608,7 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
             dissect_usb_set_interface_req_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_SET_INTERFACE_RSP:
+            dissect_usb_set_interface_rsp_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_VENDOR_CLASS_REQ:
             dissect_usb_vendor_class_req_data(pinfo, tree, tvb, offset + 3);
