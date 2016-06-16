@@ -103,6 +103,7 @@ static int hf_ozwpan_length = -1;
 static int hf_ozwpan_request = -1;
 static int hf_ozwpan_value = -1;
 static int hf_ozwpan_vendor_class_index = -1;
+static int hf_ozwpan_alternative = -1;
 
 static int hf_ozwpan_app_data = -1;
 static int hf_ozwpan_vendor_class_rqt_data = -1;
@@ -521,6 +522,15 @@ dissect_usb_set_config_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *
 }
 
 static void
+dissect_usb_set_interface_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
+    col_set_str(pinfo->cinfo, COL_INFO, "USB set interface request");
+
+    proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_index, tvb, offset + 1, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_alternative, tvb, offset + 2, 1, ENC_LITTLE_ENDIAN);
+}
+
+static void
 dissect_usb_vendor_class_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
     proto_tree *request_type_tree = NULL;
     proto_item *req_type;
@@ -587,6 +597,7 @@ dissect_app_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset
             dissect_usb_set_config_rsp_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_SET_INTERFACE_REQ:
+            dissect_usb_set_interface_req_data(pinfo, tree, tvb, offset + 3);
             break;
         case OZ_SET_INTERFACE_RSP:
             break;
@@ -1105,6 +1116,11 @@ proto_register_ozwpan(void)
         {   &hf_ozwpan_vendor_class_rsp_data,
             {   "Vendor class response data", "ozwpan.vendor_class_rsp_data",
                 FT_BYTES, BASE_NONE, NULL, 0, "Frame Data", HFILL
+            }
+        },
+        {   &hf_ozwpan_alternative,
+            {   "Alternative", "ozwpan.index",
+                FT_UINT8, BASE_HEX, NULL, 0, NULL, HFILL
             }
         },
     };
