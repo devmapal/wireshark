@@ -430,13 +430,27 @@ static void
 dissect_usb_get_desc_req_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tvb, int offset) {
     proto_tree *request_type_tree = NULL;
     proto_item *req_type;
+    guint8 descriptor_type;
 
     if (tvb_reported_length_remaining(tvb, offset) < 10) {
         col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor request (Incomplete)");
         return;
     }
 
-    col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor request");
+    descriptor_type = tvb_get_guint8(tvb, offset + 6);
+    switch(descriptor_type) {
+    case OZ_DESC_DEVICE:
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get device descriptor request");
+        break;
+    case OZ_DESC_CONFIG:
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get configuration descriptor request");
+        break;
+    case OZ_DESC_STRING:
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get string descriptor request");
+        break;
+    default:
+        break;
+    }
 
     proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_offset, tvb, offset + 1, 2, ENC_LITTLE_ENDIAN);
@@ -471,8 +485,6 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
 
     usb_conv_info->usb_trans_info = usb_trans_info;
 
-    col_set_str(pinfo->cinfo, COL_INFO, "USB get descriptor response");
-
     proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_offset, tvb, offset + 1, 2, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_size, tvb, offset + 3, 2, ENC_LITTLE_ENDIAN);
@@ -488,12 +500,16 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
     desc_type_id = tvb_get_guint8(tvb, offset + 7);
     switch (desc_type_id) {
     case OZ_DESC_DEVICE:
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get device descriptor response");
         dissect_usb_device_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
         break;
     case OZ_DESC_CONFIG:
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get configuration descriptor response");
         dissect_usb_configuration_descriptor(pinfo, tree, tvb, offset + 6, usb_conv_info);
         break;
     case OZ_DESC_STRING:
+        col_set_str(pinfo->cinfo, COL_INFO, "USB get string descriptor response");
+
         // FIXME: Need to keeo more state. usb_index = 0 for getting wLANID,
         // usb_index != 0 if descriptor contains the string
         usb_trans_info->u.get_descriptor.usb_index = 1;
