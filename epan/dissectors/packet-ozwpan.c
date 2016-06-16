@@ -488,7 +488,7 @@ dissect_usb_get_desc_rsp_data(packet_info *pinfo, proto_tree *tree, tvbuff_t *tv
     proto_tree_add_item(tree, hf_ozwpan_req_id, tvb, offset, 1, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_offset, tvb, offset + 1, 2, ENC_LITTLE_ENDIAN);
     proto_tree_add_item(tree, hf_ozwpan_size, tvb, offset + 3, 2, ENC_LITTLE_ENDIAN);
-    proto_tree_add_item(tree, hf_ozwpan_rcode, tvb, offset + 4, 1, ENC_LITTLE_ENDIAN);
+    proto_tree_add_item(tree, hf_ozwpan_rcode, tvb, offset + 5, 1, ENC_LITTLE_ENDIAN);
 
     usb_offset = tvb_get_guint16(tvb, offset + 1, ENC_LITTLE_ENDIAN);
     size = tvb_get_guint16(tvb, offset + 3, ENC_LITTLE_ENDIAN);
